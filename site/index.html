@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulateur de Crise Stratégique — Team UTC</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-alt: #273449;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.12);
+      --green: #34d399;
+      --amber: #fbbf24;
+      --rose: #fb7185;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    header {
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #0f172a 0%, #172554 100%);
+      padding: 2.5rem 1.5rem;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      margin-bottom: 0.75rem;
+    }
+    h1 { margin: 0 0 0.5rem; font-size: 2rem; }
+    h2 { margin: 2.5rem 0 1rem; font-size: 1.35rem; border-left: 4px solid var(--accent); padding-left: 0.75rem; }
+    h3 { margin: 0 0 0.5rem; font-size: 1.05rem; color: var(--accent); }
+    p.lead { color: var(--muted); max-width: 780px; margin: 0; }
+    main { padding: 1rem 1.5rem 4rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 1rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+    }
+    .card p, .card li { color: var(--muted); font-size: 0.93rem; }
+    .card ul { padding-left: 1.1rem; margin: 0.5rem 0 0; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+    .tag {
+      font-size: 0.76rem;
+      padding: 0.18rem 0.5rem;
+      border-radius: 6px;
+      background: var(--surface-alt);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .arch-flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+    }
+    .arch-box {
+      flex: 1 1 170px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      text-align: center;
+      font-size: 0.88rem;
+    }
+    .arch-box strong { display: block; color: var(--accent); margin-bottom: 0.25rem; }
+    .arrow { color: var(--muted); font-weight: bold; }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    button.filter-btn {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    button.filter-btn.active {
+      background: var(--accent);
+      color: #0f172a;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 0.92rem;
+    }
+    th, td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--surface-alt); color: var(--accent); font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    .status-note {
+      border-left: 4px solid var(--amber);
+      background: rgba(251, 191, 36, 0.08);
+      padding: 0.9rem 1.1rem;
+      border-radius: 0 8px 8px 0;
+      margin-top: 1.5rem;
+      font-size: 0.92rem;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <span class="badge">Hackathon Désinformation &amp; Souveraineté Démocratique — Team UTC</span>
+      <h1>Simulateur de Crise Stratégique (Réseaux Sociaux &amp; Multi-Agents)</h1>
+      <p class="lead">
+        Plateforme d'entraînement en temps réel destinée aux <strong>acteurs gouvernementaux et cellules de crise</strong> :
+        simuler une campagne de <em>fake news</em> ciblant l'État, observer des agents sociaux parler entre eux, tester le ton d'une réponse et mesurer son impact viral.
+        &mdash; <a href="../00-cadrage-et-hypotheses/HYPOTHESES.md">Consulter les hypothèses</a>
+        &bull; <a href="architecture.html"><strong>Voir la page animée des composantes &amp; qui fait quoi &rarr;</strong></a>
+      </p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section>
+      <h2>En très simple : c'est un jeu d'entraînement anti-fake news</h2>
+      <div class="card">
+        <p style="color: var(--text); margin-top: 0;">
+          <strong>L'idée :</strong> Une fausse rumeur contre le gouvernement démarre sur un réseau social virtuel.
+          Des bots, des trolls, des influenceurs et des citoyens se répondent entre eux, et un algorithme pousse les posts qui font le plus réagir.
+          Vous jouez la cellule de crise, <strong>tour par tour</strong>, pour tester la meilleure réponse et calmer la tempête.
+        </p>
+        <div class="grid" style="margin-top: 1rem;">
+          <div class="card" style="background: var(--surface-alt);">
+            <h3>Exemple : Tour 1 &rarr; Tour 2</h3>
+            <p>Des trolls lancent : <em>« Nouvelle taxe sur le livret A lundi ! »</em>. Les gens s'énervent, l'algorithme pousse le post à 500 personnes.</p>
+          </div>
+          <div class="card" style="background: var(--surface-alt);">
+            <h3>Votre test de réponse</h3>
+            <p>Si vous répondez de façon agressive, l'effet Streisand explose. Si vous répondez avec des faits clairs et calmes, le score d'alerte baisse.</p>
+          </div>
+          <div class="card" style="background: var(--surface-alt);">
+            <h3>Bouton « +5 / +10 tours »</h3>
+            <p>On accélère la simulation pour voir en quelques secondes si la rumeur meurt ou continue de grossir sur le graphe.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>1. Les 6 dossiers détaillés du projet</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>01. Scénarios &amp; Données</h3>
+          <p>Cas réalistes inspirés d'EUvsDiSiNFO avec chronomètre de crise et injection progressive d'événements.</p>
+          <ul>
+            <li>3 scénarios complets (JSON)</li>
+            <li>Chronomètre &amp; rebondissements</li>
+            <li><a href="../01-scenarios-et-donnees/SPEC.md">Voir SPEC.md</a></li>
+          </ul>
+          <div class="tag-row"><span class="tag">Bouchra</span><span class="tag">Téo</span><span class="tag">Enzo</span></div>
+        </div>
+
+        <div class="card">
+          <h3>02. Interface de Rédaction</h3>
+          <p>Cockpit de crise ergonomique pour formuler communiqués officiels et posts natifs selon la plateforme.</p>
+          <ul>
+            <li>Fil social simulé en direct</li>
+            <li>Éditeur multi-formats + test de ton</li>
+            <li><a href="../02-interface-redaction/SPEC.md">Voir SPEC.md</a></li>
+          </ul>
+          <div class="tag-row"><span class="tag">Victorien</span><span class="tag">Téo</span><span class="tag">Meïssa</span></div>
+        </div>
+
+        <div class="card">
+          <h3>03. Matrice d'Évaluation du Ton</h3>
+          <p>Analyse comparative LLM + RAG souverain évaluant la posture avant publication.</p>
+          <ul>
+            <li>Scores : Factuel / Pre-bunking / Défensif</li>
+            <li>Alerte effet Streisand &amp; reformulations</li>
+            <li><a href="../03-evaluation-ton-rag/SPEC.md">Voir SPEC.md</a></li>
+          </ul>
+          <div class="tag-row"><span class="tag">Ahmad</span><span class="tag">Téo</span><span class="tag">Bouchra</span></div>
+        </div>
+
+        <div class="card">
+          <h3>04. Simulation Multi-Agents &amp; Recommender</h3>
+          <p>Agents autonomes qui parlent entre eux + système de recommandation réaliste, en mode tour par tour avec accélération.</p>
+          <ul>
+            <li>Moteur Python + agents clés via API LLM</li>
+            <li>Contrôles +1 tour / +5 / +10 tours (échelle rapide)</li>
+            <li><a href="../04-simulation-multi-agents/SPEC.md">Voir SPEC.md</a></li>
+          </ul>
+          <div class="tag-row"><span class="tag">Victorien</span><span class="tag">César</span><span class="tag">Meïssa</span></div>
+        </div>
+
+        <div class="card">
+          <h3>05. Métriques d'Impact &amp; Risque</h3>
+          <p>Tableau de bord mis à jour à chaque décision pour évaluer la stratégie de communication.</p>
+          <ul>
+            <li>Score d'atténuation virale</li>
+            <li>Risque d'effet Streisand &amp; débriefing</li>
+            <li><a href="../05-metriques-et-impact/SPEC.md">Voir SPEC.md</a></li>
+          </ul>
+          <div class="tag-row"><span class="tag">Meïssa</span><span class="tag">Bouchra</span><span class="tag">Enzo</span></div>
+        </div>
+
+        <div class="card">
+          <h3>06. Infra, DevOps &amp; Sécurité</h3>
+          <p>Architecture conteneurisée, CI/CD, API Gateway temps réel et mode démo résilient.</p>
+          <ul>
+            <li>Docker Compose &amp; déploiement Cloud</li>
+            <li>Sécurité &amp; fallback IA</li>
+            <li><a href="../06-infra-devops-securite/SPEC.md">Voir SPEC.md</a></li>
+          </ul>
+          <div class="tag-row"><span class="tag">Badyss</span><span class="tag">Enzo</span><span class="tag">Ahmad</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>2. Architecture &amp; Flux Tour par Tour (Stack Validée)</h2>
+      <div class="arch-flow">
+        <div class="arch-box">
+          <strong>Frontend React</strong>
+          Interface simple<br />Fil social, éditeur, graphe &amp; +1/+5 tours
+        </div>
+        <span class="arrow">&rarr;</span>
+        <div class="arch-box">
+          <strong>Backend Python</strong>
+          FastAPI<br />APIs REST, sessions &amp; scénarios
+        </div>
+        <span class="arrow">&rarr;</span>
+        <div class="arch-box">
+          <strong>Moteur Multi-Agents</strong>
+          Python (NetworkX / NumPy)<br />Recommender + échanges nœud à nœud
+        </div>
+        <span class="arrow">&rarr;</span>
+        <div class="arch-box">
+          <strong>Matrice Ton &amp; RAG</strong>
+          API Mistral + ChromaDB<br />Dialogues clés, scoring &amp; débunk
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>3. Répartition des rôles — Équipe de 6 à 8 personnes (Prépa + 3 jours)</h2>
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">Tous les rôles (6)</button>
+        <button class="filter-btn" data-filter="sim">Algo, Propagation &amp; UI</button>
+        <button class="filter-btn" data-filter="ia">IA, Scénarios &amp; Scores</button>
+        <button class="filter-btn" data-filter="infra">Backend &amp; Infra</button>
+      </div>
+      <table id="team-table">
+        <thead>
+          <tr>
+            <th>Rôle (sans noms figés)</th>
+            <th>Composante</th>
+            <th>Ce qu'il faut faire concrètement + exemple simple</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-group="sim">
+            <td><strong>Algo &amp; Propagation</strong><br /><span style="color:var(--accent); font-size:0.82rem;">(Préférence : Téo)</span></td>
+            <td>04 (Python)</td>
+            <td>Créer le graphe de comptes, coder l'algo « Pour vous » qui pousse les posts chauds et gérer le tour par tour (+1 / +5 tours). <em>Ex. : 10 réactions rapides de bots &rarr; post poussé chez 200 citoyens.</em></td>
+          </tr>
+          <tr data-group="ia">
+            <td><strong>Agents qui parlent &amp; Ton</strong></td>
+            <td>03 (Python + Mistral)</td>
+            <td>Générer les réponses des comptes clés via l'API Mistral et noter les brouillons du joueur (Factuel, Pre-bunking, risque Streisand) avec ChromaDB.</td>
+          </tr>
+          <tr data-group="infra">
+            <td><strong>Serveur Central (API)</strong></td>
+            <td>06 (FastAPI)</td>
+            <td>Créer 4 routes simples (<code>/start</code>, <code>/test-tone</code>, <code>/reply</code>, <code>/step</code>), garder l'historique des échanges et mettre en cache pour l'accélération.</td>
+          </tr>
+          <tr data-group="sim">
+            <td><strong>Interface Web &amp; Graphe</strong></td>
+            <td>02 (React)</td>
+            <td>Construire le fil social lisible, la boîte de réponse avec jauges, les boutons +1 / +5 tours et le graphe animé (bleu organique vs orange algo).</td>
+          </tr>
+          <tr data-group="ia">
+            <td><strong>Scénarios &amp; Scores</strong></td>
+            <td>01 &amp; 05 (Data)</td>
+            <td>Rédiger 2–3 crises réalistes en JSON avec rebondissements, et calculer le % de citoyens touchés/rassurés + l'alerte d'effet Streisand.</td>
+          </tr>
+          <tr data-group="infra">
+            <td><strong>Lancement &amp; Sécurité</strong></td>
+            <td>06 (Docker)</td>
+            <td>Écrire le <code>docker-compose.yml</code> (React + FastAPI + ChromaDB), protéger les clés Mistral dans <code>.env</code> et prévoir un mode secours pour la démo.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="status-note">
+        <strong>Note :</strong> L'option alternative <em>Challenge 3 — Disinformation Wrapped</em> est conservée dans
+        <a href="../../candidature.md">candidature.md</a>. Les spécifications détaillées de chaque module restent à affiner selon les choix de stack validés en équipe.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Team UTC — Documentation générée pour le Hackathon Adopt AI (<a href="../README.md">README.md</a> &bull; <a href="../07-repartition-equipe/TASKS.md">TASKS.md</a>)
+  </footer>
+
+  <script>
+    const buttons = document.querySelectorAll('.filter-btn');
+    const rows = document.querySelectorAll('#team-table tbody tr');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        rows.forEach(row => {
+          row.style.display = (filter === 'all' || row.dataset.group === filter) ? '' : 'none';
+        });
+      });
+    });
+  </script>
+</body>
+</html>

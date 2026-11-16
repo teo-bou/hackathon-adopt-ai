@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Composantes du Système &amp; Rôles — Simulateur de Crise</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: #111827;
+      --surface-2: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --blue: #38bdf8;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --rose: #fb7185;
+      --purple: #a78bfa;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    header {
+      background: linear-gradient(135deg, #0b1120 0%, #172554 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 1.75rem 1.5rem;
+    }
+    .container { max-width: 1180px; margin: 0 auto; }
+    .nav-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .nav-links a {
+      display: inline-block;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.7);
+      color: var(--blue);
+      text-decoration: none;
+      font-size: 0.85rem;
+      margin-left: 0.4rem;
+    }
+    .nav-links a:hover { border-color: var(--blue); }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.14);
+      color: var(--blue);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    h1 { margin: 0.25rem 0; font-size: 1.8rem; }
+    p.lead { color: var(--muted); margin: 0; max-width: 850px; }
+    main { padding: 1.5rem 1.5rem 4rem; }
+    h2 {
+      margin: 2.2rem 0 1rem;
+      font-size: 1.28rem;
+      border-left: 4px solid var(--blue);
+      padding-left: 0.75rem;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    /* Animated System Flow */
+    .flow-wrap {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .comp-card {
+      position: relative;
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .comp-card:hover { transform: translateY(-3px); border-color: var(--blue); }
+    .comp-card.active {
+      border-color: var(--blue);
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.25);
+    }
+    .comp-card.pulse::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 14px;
+      border: 2px solid var(--green);
+      animation: pulseRing 1.4s ease-out infinite;
+      pointer-events: none;
+    }
+    @keyframes pulseRing {
+      0% { opacity: 0.9; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.04); }
+    }
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #0b1120;
+      font-weight: 700;
+      font-size: 0.78rem;
+      margin-right: 0.4rem;
+    }
+    .comp-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.35rem; display: flex; align-items: center; }
+    .comp-tech { font-size: 0.8rem; color: var(--purple); font-weight: 600; margin-bottom: 0.45rem; }
+    .comp-desc { font-size: 0.86rem; color: var(--muted); margin: 0 0 0.7rem; }
+    .role-pill {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.18rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(52, 211, 153, 0.14);
+      color: var(--green);
+      border: 1px solid rgba(52, 211, 153, 0.35);
+      font-weight: 600;
+    }
+    .role-pill.highlight {
+      background: rgba(56, 189, 248, 0.16);
+      color: var(--blue);
+      border-color: rgba(56, 189, 248, 0.45);
+    }
+    .flow-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .btn {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.48rem 0.9rem;
+      font-size: 0.86rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn:hover { border-color: var(--blue); }
+    .btn.primary { background: var(--blue); color: #0b1120; border-color: var(--blue); }
+    .btn.danger { background: rgba(251, 113, 133, 0.16); color: var(--rose); border-color: var(--rose); }
+    .btn.good { background: rgba(52, 211, 153, 0.16); color: var(--green); border-color: var(--green); }
+    .btn.amber { background: rgba(251, 191, 36, 0.16); color: var(--amber); border-color: var(--amber); }
+
+    .detail-banner {
+      margin-top: 1rem;
+      background: var(--surface-2);
+      border-left: 4px solid var(--blue);
+      border-radius: 0 10px 10px 0;
+      padding: 0.95rem 1.15rem;
+      font-size: 0.92rem;
+    }
+
+    /* Live Simulation Visualizer */
+    .sim-grid {
+      display: grid;
+      grid-template-columns: 1.55fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 900px) {
+      .sim-grid { grid-template-columns: 1fr; }
+    }
+    canvas#graphCanvas {
+      width: 100%;
+      height: 390px;
+      background: radial-gradient(circle at center, #111c33 0%, #090e1a 100%);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: block;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 0.65rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 0.35rem;
+    }
+    .sim-sidebar { display: flex; flex-direction: column; gap: 0.85rem; }
+    .metric-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem;
+    }
+    .metric-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.84rem;
+      margin-bottom: 0.35rem;
+    }
+    .bar-bg {
+      height: 10px;
+      background: #0b1120;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.55s ease, background 0.3s ease;
+    }
+    .feed-box {
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem;
+      height: 190px;
+      overflow-y: auto;
+      font-size: 0.82rem;
+    }
+    .feed-item {
+      padding: 0.45rem 0.55rem;
+      border-radius: 6px;
+      margin-bottom: 0.45rem;
+      background: var(--surface-2);
+      border-left: 3px solid var(--blue);
+      animation: fadeSlide 0.35s ease;
+    }
+    .feed-item.troll { border-left-color: var(--rose); }
+    .feed-item.algo { border-left-color: var(--amber); }
+    .feed-item.gov { border-left-color: var(--green); }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Detailed Sub-components */
+    .parts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+      gap: 1rem;
+    }
+    .part-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .part-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    .part-title { font-weight: 700; font-size: 1.05rem; color: var(--blue); }
+    .subtask {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.65rem 0.8rem;
+      font-size: 0.86rem;
+    }
+    .subtask strong { color: var(--text); display: block; margin-bottom: 0.2rem; }
+    .subtask p { margin: 0; color: var(--muted); }
+    .example-box {
+      background: rgba(251, 191, 36, 0.08);
+      border-left: 3px solid var(--amber);
+      padding: 0.55rem 0.75rem;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.84rem;
+      color: #fde68a;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="nav-top">
+        <span class="badge">Composantes du Système &amp; Guide Pratique — Équipe 6 à 8 pers.</span>
+        <div class="nav-links">
+          <a href="index.html">&larr; Résumé simple</a>
+          <a href="../07-repartition-equipe/TASKS.md">Plan 3 jours (TASKS.md)</a>
+        </div>
+      </div>
+      <h1>Comment le Système Fonctionne &amp; Ce Que Chaque Rôle Doit Faire</h1>
+      <p class="lead">
+        Une vue claire par composantes et sous-parties concrètes, avec des exemples simples et des animations pour comprendre comment les posts circulent et qui développe quoi.
+      </p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- SECTION 1: ANIMATED SYSTEM FLOW -->
+    <section>
+      <h2>1. Parcours animé d'un tour de jeu (Cliquez sur une composante)</h2>
+      <div class="panel">
+        <div class="flow-controls">
+          <div>
+            <button class="btn primary" id="toggleCycleBtn">&#9646;&#9646; Pause animation flux</button>
+            <button class="btn" id="nextStepBtn">Étape suivante &rarr;</button>
+          </div>
+          <span id="cycleLabel" style="font-size: 0.86rem; color: var(--blue); font-weight: 600;">
+            Étape active : 1 / 6
+          </span>
+        </div>
+
+        <div class="flow-wrap" id="flowCards">
+          <div class="comp-card active pulse" data-step="0">
+            <div class="comp-title"><span class="step-num">1</span> Scénarios &amp; Faits</div>
+            <div class="comp-tech">Fichiers JSON + Faits vérifiés</div>
+            <p class="comp-desc">Envoie la fake news de départ et les rebondissements selon le tour.</p>
+            <span class="role-pill">Rôle Scénarios &amp; Data</span>
+          </div>
+
+          <div class="comp-card" data-step="1">
+            <div class="comp-title"><span class="step-num">2</span> Écran de Jeu (UI)</div>
+            <div class="comp-tech">Frontend React simple</div>
+            <p class="comp-desc">Affiche le fil social, le graphe animé, la boîte de réponse et les boutons +1 / +5 tours.</p>
+            <span class="role-pill">Rôle Frontend React (1-2 pers.)</span>
+          </div>
+
+          <div class="comp-card" data-step="2">
+            <div class="comp-title"><span class="step-num">3</span> IA : Ton &amp; Dialogues</div>
+            <div class="comp-tech">Python + API Mistral + ChromaDB</div>
+            <p class="comp-desc">Note le brouillon du joueur et fait parler les comptes clés (trolls, médias, citoyens).</p>
+            <span class="role-pill">Rôle IA &amp; Prompts (1-2 pers.)</span>
+          </div>
+
+          <div class="comp-card" data-step="3">
+            <div class="comp-title"><span class="step-num">4</span> Serveur Central</div>
+            <div class="comp-tech">Backend Python FastAPI</div>
+            <p class="comp-desc">Reçoit les clics de React, lance les tours suivants et garde l'historique de la partie.</p>
+            <span class="role-pill">Rôle Backend API Python</span>
+          </div>
+
+          <div class="comp-card" data-step="4">
+            <div class="comp-title"><span class="step-num">5</span> Propagation &amp; Recommender</div>
+            <div class="comp-tech">Moteur Graphe Python</div>
+            <p class="comp-desc">Décide qui voit quel post, qui le partage, et quels posts l'algorithme pousse partout.</p>
+            <span class="role-pill highlight">Rôle Algo &amp; Propagation (Téo)</span>
+          </div>
+
+          <div class="comp-card" data-step="5">
+            <div class="comp-title"><span class="step-num">6</span> Scores &amp; Lancement</div>
+            <div class="comp-tech">KPIs Crise + Docker</div>
+            <p class="comp-desc">Calcule l'atténuation virale / l'effet Streisand et permet de tout lancer en 1 commande.</p>
+            <span class="role-pill">Rôle Métriques &amp; DevOps</span>
+          </div>
+        </div>
+
+        <div class="detail-banner" id="detailBanner">
+          <strong>1. Scénarios &amp; Faits :</strong> Au tour 1, injecte la rumeur de départ (ex. <em>« Nouvelle taxe sur le livret A lundi »</em>) et fournit les vraies infos officielles.
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: ANIMATED GRAPH & RECOMMENDER DEMO -->
+    <section>
+      <h2>2. Visualisation animée : Comment les posts voyagent entre nœuds</h2>
+      <div class="panel">
+        <div class="flow-controls">
+          <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+            <button class="btn amber" id="btnRumor">1. Lancer la fake news</button>
+            <button class="btn danger" id="btnBadReply">2a. Réponse agressive (Streisand !)</button>
+            <button class="btn good" id="btnGoodReply">2b. Réponse calme (Pre-bunking)</button>
+            <button class="btn primary" id="btnFastForward">Accélérer (+5 tours)</button>
+          </div>
+          <span id="turnCounter" style="font-weight:700; color:var(--blue);">Tour 1</span>
+        </div>
+
+        <div class="sim-grid">
+          <div>
+            <canvas id="graphCanvas" width="700" height="390"></canvas>
+            <div class="legend">
+              <span><span class="dot" style="background:#38bdf8;"></span>Citoyens (neutres)</span>
+              <span><span class="dot" style="background:#fb7185;"></span>Bots / Trolls / Convaincus par la rumeur</span>
+              <span><span class="dot" style="background:#34d399;"></span>Gouv / Citoyens informés</span>
+              <span><span class="dot" style="background:#fbbf24;"></span>Post poussé par l'algo de recommandation</span>
+            </div>
+          </div>
+
+          <div class="sim-sidebar">
+            <div class="metric-card">
+              <div class="metric-head"><span>Portée de la fake news</span><strong id="viralVal">28%</strong></div>
+              <div class="bar-bg"><div class="bar-fill" id="viralBar" style="width:28%; background:var(--rose);"></div></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-head"><span>Risque d'effet Streisand</span><strong id="streisandVal">15%</strong></div>
+              <div class="bar-bg"><div class="bar-fill" id="streisandBar" style="width:15%; background:var(--amber);"></div></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-head"><span>Citoyens qui ont compris les faits</span><strong id="immuneVal">12%</strong></div>
+              <div class="bar-bg"><div class="bar-fill" id="immuneBar" style="width:12%; background:var(--green);"></div></div>
+            </div>
+
+            <div>
+              <div style="font-size:0.84rem; font-weight:600; margin-bottom:0.35rem;">Ce que se disent les agents (en direct)</div>
+              <div class="feed-box" id="feedBox">
+                <div class="feed-item troll"><strong>@Troll_Actu</strong> : « Document exclusif : nouvelle taxe surprise dès lundi ! Partagez avant censure ! »</div>
+                <div class="feed-item algo"><strong>[Algo Recommender]</strong> Beaucoup de réactions rapides &rarr; post poussé vers 12 nouveaux citoyens.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: CONCRETE BREAKDOWN IN SUB-PARTS WITH SIMPLE EXAMPLES -->
+    <section>
+      <h2>3. Concrètement : que doivent coder les gens ? (Sous-parties &amp; exemples simples)</h2>
+      <div class="parts-grid">
+
+        <div class="part-card" style="border-color: rgba(56, 189, 248, 0.55);">
+          <div class="part-header">
+            <div class="part-title">A. Propagation &amp; Algo de Recommandation (Python)</div>
+            <span class="role-pill highlight">Choix de Téo</span>
+          </div>
+          <div class="subtask">
+            <strong>1. Créer le réseau (le graphe)</strong>
+            <p>Fabriquer ~500 à 2 000 profils (citoyens, trolls, bots, influenceurs, État) et relier qui suit qui.</p>
+          </div>
+          <div class="subtask">
+            <strong>2. Coder l'algo « Pour vous » (Recommender)</strong>
+            <p>Calculer un score pour chaque post selon : nb de likes/réponses rapides, mots énervants, et proximité entre comptes.</p>
+          </div>
+          <div class="subtask">
+            <strong>3. Coder la réaction des nœuds + avance rapide</strong>
+            <p>À chaque tour, chaque profil qui reçoit un post décide s'il l'ignore, le partage ou change d'avis. Gérer <code>step(turns=1 ou 5)</code>.</p>
+          </div>
+          <div class="example-box">
+            <strong>Exemple simple :</strong> Un bot poste une rumeur à ses 5 abonnés. 10 autres bots commentent en 30 secondes. L'algo voit un pic d'activité et pousse le post dans le fil de 200 citoyens neutres !
+          </div>
+        </div>
+
+        <div class="part-card">
+          <div class="part-header">
+            <div class="part-title">B. Agents qui parlent &amp; Analyse du Ton (Python + IA)</div>
+            <span class="role-pill">Rôle IA / LLM</span>
+          </div>
+          <div class="subtask">
+            <strong>1. Générer les dialogues des comptes clés</strong>
+            <p>Envoyer un court contexte à l'API Mistral pour écrire les réponses de 10-20 profils importants (un journaliste sceptique, un troll agressif, un citoyen inquiet).</p>
+          </div>
+          <div class="subtask">
+            <strong>2. Tester le ton du joueur avant publication</strong>
+            <p>Prendre le brouillon du gouvernement et demander à Mistral 3 notes sur 100 : <em>Clarté factuelle</em>, <em>Pre-bunking</em>, <em>Risque d'énerver / Streisand</em>.</p>
+          </div>
+          <div class="subtask">
+            <strong>3. Brancher une petite base de preuves (ChromaDB)</strong>
+            <p>Retrouver automatiquement les 2 vraies infos officielles pour aider le joueur à reformuler.</p>
+          </div>
+          <div class="example-box">
+            <strong>Exemple simple :</strong> Tu écris « C'est n'importe quoi ! ». L'IA répond : « Attention, ton défensif (78/100) : risque d'effet Streisand. Essaie plutôt : Aucune taxe prévue, voici le lien du décret. »
+          </div>
+        </div>
+
+        <div class="part-card">
+          <div class="part-header">
+            <div class="part-title">C. Interface Web &amp; Graphe Visuel (React)</div>
+            <span class="role-pill">Rôle Frontend React</span>
+          </div>
+          <div class="subtask">
+            <strong>1. Le fil de posts simulé</strong>
+            <p>Afficher une colonne claire (comme X/Twitter) où l'on lit les messages des bots, influenceurs et citoyens.</p>
+          </div>
+          <div class="subtask">
+            <strong>2. La zone d'écriture &amp; test de ton</strong>
+            <p>Un champ texte pour le joueur + bouton « Tester mon ton » (affiche 3 barres de couleur) + bouton « Publier ».</p>
+          </div>
+          <div class="subtask">
+            <strong>3. Les boutons de rythme &amp; le graphe animé</strong>
+            <p>Boutons « Tour +1 » et « Accélérer +5 tours », plus le dessin des nœuds qui changent de couleur et montrent les partages algo vs amis.</p>
+          </div>
+          <div class="example-box">
+            <strong>Exemple simple :</strong> Le joueur clique « Accélérer +5 tours », voit les points rouges devenir verts sur le graphe et la courbe de rumeur redescendre.
+          </div>
+        </div>
+
+        <div class="part-card">
+          <div class="part-header">
+            <div class="part-title">D. Serveur Central (Python FastAPI)</div>
+            <span class="role-pill">Rôle Backend API</span>
+          </div>
+          <div class="subtask">
+            <strong>1. Créer les 4 routes simples</strong>
+            <p><code>POST /start</code> (lancer scénario), <code>POST /test-tone</code> (noter brouillon), <code>POST /reply</code> (publier), <code>POST /step</code> (avancer N tours).</p>
+          </div>
+          <div class="subtask">
+            <strong>2. Garder la mémoire de la partie</strong>
+            <p>Stocker la liste des posts, qui a envoyé quoi à qui (<code>source &rarr; cible</code>), et pouvoir comparer deux essais (<em>What-if</em>).</p>
+          </div>
+          <div class="subtask">
+            <strong>3. Cache anti-lenteur</strong>
+            <p>Garder certaines réponses en cache si on accélère de 10 tours d'un coup, pour que l'écran reste fluide.</p>
+          </div>
+          <div class="example-box">
+            <strong>Exemple simple :</strong> React envoie <code>{"turns": 5}</code> à FastAPI ; FastAPI appelle le moteur de Téo 5 fois et renvoie la liste des nouveaux posts + les scores à React.
+          </div>
+        </div>
+
+        <div class="part-card">
+          <div class="part-header">
+            <div class="part-title">E. Scénarios de Crise &amp; Scores d'Impact</div>
+            <span class="role-pill">Rôle Data &amp; Scénarios</span>
+          </div>
+          <div class="subtask">
+            <strong>1. Rédiger 2 ou 3 crises réalistes (JSON)</strong>
+            <p>Inspirées de cas EUvsDiSiNFO : un post de départ, une liste de comptes initiaux, et des rebondissements (ex. au tour 4, un faux article sort).</p>
+          </div>
+          <div class="subtask">
+            <strong>2. Calculer les indicateurs du tableau de bord</strong>
+            <p>Compter le % de personnes touchées par la rumeur, le % rassuré par les faits, et le score d'effet Streisand.</p>
+          </div>
+          <div class="subtask">
+            <strong>3. Écran bilan de fin de partie</strong>
+            <p>Résumer en 3 lignes ce qui a bien marché ou empiré la crise.</p>
+          </div>
+          <div class="example-box">
+            <strong>Exemple simple :</strong> Si la rumeur atteint 200 personnes avant ta réponse puis 600 juste après, le score signale un effet Streisand. Si elle stagne, tu gagnes un bon score d'atténuation.
+          </div>
+        </div>
+
+        <div class="part-card">
+          <div class="part-header">
+            <div class="part-title">F. Lancement Facile &amp; Sécurité (DevOps)</div>
+            <span class="role-pill">Rôle Infra / Docker</span>
+          </div>
+          <div class="subtask">
+            <strong>1. Tout démarrer en 1 commande</strong>
+            <p>Écrire un <code>docker-compose.yml</code> qui lance le backend Python, ChromaDB et le front React ensemble.</p>
+          </div>
+          <div class="subtask">
+            <strong>2. Protéger les clés API (Mistral)</strong>
+            <p>Mettre les clés dans un fichier <code>.env</code> caché et éviter que trop de clics fassent planter l'API.</p>
+          </div>
+          <div class="subtask">
+            <strong>3. Mode secours pour la démo finale</strong>
+            <p>Prévoir un jeu de réponses enregistrées au cas où le Wi-Fi de la salle coupe pendant le pitch.</p>
+          </div>
+          <div class="example-box">
+            <strong>Exemple simple :</strong> Un membre de l'équipe clone le dépôt, copie le <code>.env</code>, tape <code>docker compose up</code> et le simulateur tourne tout de suite sur son ordinateur.
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // --- 1. Animated System Component Stepper ---
+    const stepDetails = [
+      "<strong>1. Scénarios &amp; Faits :</strong> Au tour 1, injecte la rumeur de départ (ex. <em>« Nouvelle taxe sur le livret A lundi »</em>) et charge les vraies infos officielles.",
+      "<strong>2. Écran de Jeu React :</strong> Le joueur lit le fil social, écrit sa réponse, vérifie le ton et clique sur « Tour +1 » ou « Accélérer +5 tours ».",
+      "<strong>3. IA (Ton &amp; Dialogues) :</strong> L'API Mistral + ChromaDB note le brouillon (factuel, pre-bunking, risque Streisand) et fait parler les comptes clés.",
+      "<strong>4. Serveur Central FastAPI :</strong> Coordonne les tours, sauvegarde qui a répondu à qui, et renvoie tout proprement à React.",
+      "<strong>5. Propagation &amp; Recommender (Téo) :</strong> Calcule comment les posts passent d'un nœud à l'autre et quels posts l'algorithme pousse partout.",
+      "<strong>6. Scores &amp; Lancement :</strong> Met à jour les jauges d'impact et garantit que tout tourne sans accroc via Docker."
+    ];
+    const cards = document.querySelectorAll('.comp-card');
+    const detailBanner = document.getElementById('detailBanner');
+    const cycleLabel = document.getElementById('cycleLabel');
+    const toggleCycleBtn = document.getElementById('toggleCycleBtn');
+    const nextStepBtn = document.getElementById('nextStepBtn');
+    let currentStep = 0;
+    let autoPlay = true;
+
+    function setStep(idx) {
+      currentStep = (idx + cards.length) % cards.length;
+      cards.forEach((c, i) => {
+        c.classList.toggle('active', i === currentStep);
+        c.classList.toggle('pulse', i === currentStep);
+      });
+      detailBanner.innerHTML = stepDetails[currentStep];
+      cycleLabel.textContent = `Étape active : ${currentStep + 1} / 6`;
+    }
+    cards.forEach((c, i) => c.addEventListener('click', () => { autoPlay = false; toggleCycleBtn.innerHTML = '&#9654; Reprendre flux'; setStep(i); }));
+    nextStepBtn.addEventListener('click', () => setStep(currentStep + 1));
+    toggleCycleBtn.addEventListener('click', () => {
+      autoPlay = !autoPlay;
+      toggleCycleBtn.innerHTML = autoPlay ? '&#9646;&#9646; Pause animation flux' : '&#9654; Reprendre flux';
+    });
+    setInterval(() => { if (autoPlay) setStep(currentStep + 1); }, 2600);
+
+    // --- 2. Animated Graph & Post-Exchange Canvas ---
+    const canvas = document.getElementById('graphCanvas');
+    const ctx = canvas.getContext('2d');
+    const nodes = [];
+    const edges = [];
+    const packets = [];
+    let turn = 1;
+    let mode = 'rumor';
+
+    const W = canvas.width, H = canvas.height;
+    nodes.push({ id: 0, x: 110, y: H / 2, r: 15, type: 'gov', state: 'immune', label: 'État' });
+    for (let i = 1; i <= 4; i++) {
+      nodes.push({ id: i, x: 580 + (i % 2) * 55, y: 75 + i * 60, r: 10, type: 'troll', state: 'infected', label: 'Bot' });
+    }
+    for (let i = 5; i <= 7; i++) {
+      nodes.push({ id: i, x: 380 + (i - 5) * 45, y: 80 + (i - 5) * 115, r: 12, type: 'inf', state: i === 5 ? 'infected' : 'neutral', label: 'Infl.' });
+    }
+    for (let i = 8; i < 30; i++) {
+      const angle = ((i - 8) / 22) * Math.PI * 2;
+      const rx = 180 + (i % 3) * 48;
+      const ry = 115 + (i % 2) * 38;
+      nodes.push({
+        id: i,
+        x: Math.max(45, Math.min(W - 45, 340 + Math.cos(angle) * rx * 0.85)),
+        y: Math.max(35, Math.min(H - 35, H / 2 + Math.sin(angle) * ry)),
+        r: 7,
+        type: 'citizen',
+        state: i % 6 === 0 ? 'infected' : 'neutral',
+        label: ''
+      });
+    }
+
+    for (let i = 1; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        if (Math.hypot(dx, dy) < 135) edges.push([i, j]);
+      }
+      if (i >= 5 && i <= 14) edges.push([0, i]);
+    }
+
+    function spawnPacket(fromId, toId, kind) {
+      packets.push({ from: nodes[fromId], to: nodes[toId], t: 0, speed: 0.025 + Math.random() * 0.015, kind });
+    }
+
+    function addFeed(text, cls) {
+      const box = document.getElementById('feedBox');
+      const div = document.createElement('div');
+      div.className = 'feed-item ' + cls;
+      div.innerHTML = text;
+      box.prepend(div);
+      while (box.children.length > 10) box.removeChild(box.lastChild);
+    }
+
+    function updateMetrics(viral, streisand, immune) {
+      document.getElementById('viralVal').textContent = viral + '%';
+      document.getElementById('viralBar').style.width = viral + '%';
+      document.getElementById('streisandVal').textContent = streisand + '%';
+      document.getElementById('streisandBar').style.width = streisand + '%';
+      document.getElementById('immuneVal').textContent = immune + '%';
+      document.getElementById('immuneBar').style.width = immune + '%';
+    }
+
+    function runStep(count) {
+      turn += count;
+      document.getElementById('turnCounter').textContent = 'Tour ' + turn;
+      for (let s = 0; s < Math.min(count, 4); s++) {
+        if (mode === 'rumor') {
+          for (let k = 0; k < 4; k++) {
+            const src = 1 + Math.floor(Math.random() * 4);
+            const dst = 8 + Math.floor(Math.random() * 22);
+            nodes[dst].state = 'infected';
+            spawnPacket(src, dst, k % 2 === 0 ? 'algo' : 'troll');
+          }
+        } else if (mode === 'bad') {
+          for (let k = 0; k < 6; k++) {
+            const src = Math.random() < 0.5 ? 0 : 1 + Math.floor(Math.random() * 6);
+            const dst = 8 + Math.floor(Math.random() * 22);
+            nodes[dst].state = 'infected';
+            spawnPacket(src, dst, 'algo');
+          }
+        } else {
+          for (let k = 0; k < 5; k++) {
+            const src = k === 0 ? 0 : 5 + Math.floor(Math.random() * 10);
+            const dst = 8 + Math.floor(Math.random() * 22);
+            nodes[dst].state = 'immune';
+            spawnPacket(src, dst, 'gov');
+          }
+        }
+      }
+      const inf = nodes.filter(n => n.state === 'infected').length;
+      const imm = nodes.filter(n => n.state === 'immune').length;
+      const viralPct = Math.min(95, Math.round((inf / nodes.length) * 100));
+      const immPct = Math.min(95, Math.round((imm / nodes.length) * 100));
+      const streisandPct = mode === 'bad' ? Math.min(92, 48 + turn * 4) : (mode === 'good' ? Math.max(8, 18 - turn) : 24);
+      updateMetrics(viralPct, streisandPct, immPct);
+    }
+
+    document.getElementById('btnRumor').addEventListener('click', () => {
+      mode = 'rumor';
+      addFeed('<strong>[Tour ' + (turn + 1) + ']</strong> Bots &amp; trolls relancent la rumeur. L\'algo pousse vers les citoyens.', 'troll');
+      runStep(1);
+    });
+    document.getElementById('btnBadReply').addEventListener('click', () => {
+      mode = 'bad';
+      addFeed('<strong>[État — Réponse agressive]</strong> « Arrêtez ces mensonges ridicules ! » &rarr; Les trolls citent en masse, l\'algo booste le débat !', 'algo');
+      runStep(1);
+    });
+    document.getElementById('btnGoodReply').addEventListener('click', () => {
+      mode = 'good';
+      addFeed('<strong>[État — Pre-bunking]</strong> « Aucune taxe prévue. Voici les 2 indices du faux document + lien officiel. » &rarr; Les citoyens partagent la preuve.', 'gov');
+      runStep(1);
+    });
+    document.getElementById('btnFastForward').addEventListener('click', () => {
+      addFeed('<strong>[Accélération +5 tours]</strong> On avance vite de 5 tours...', mode === 'good' ? 'gov' : 'algo');
+      runStep(5);
+    });
+
+    setInterval(() => {
+      const a = Math.floor(Math.random() * nodes.length);
+      const b = 8 + Math.floor(Math.random() * (nodes.length - 8));
+      if (a !== b) {
+        const k = mode === 'good' && nodes[a].state === 'immune' ? 'gov' : (nodes[a].state === 'infected' ? 'algo' : 'organic');
+        spawnPacket(a, b, k);
+      }
+    }, 650);
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.lineWidth = 1;
+      edges.forEach(([i, j]) => {
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.16)';
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.stroke();
+      });
+
+      for (let i = packets.length - 1; i >= 0; i--) {
+        const p = packets[i];
+        p.t += p.speed;
+        if (p.t >= 1) { packets.splice(i, 1); continue; }
+        const x = p.from.x + (p.to.x - p.from.x) * p.t;
+        const y = p.from.y + (p.to.y - p.from.y) * p.t;
+        const color = p.kind === 'algo' ? '#fbbf24' : (p.kind === 'troll' ? '#fb7185' : (p.kind === 'gov' ? '#34d399' : '#38bdf8'));
+
+        ctx.strokeStyle = color + '55';
+        ctx.lineWidth = p.kind === 'algo' ? 2.2 : 1.4;
+        ctx.beginPath();
+        ctx.moveTo(p.from.x, p.from.y);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, p.kind === 'algo' ? 4.2 : 3.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      nodes.forEach(n => {
+        const col = n.state === 'infected' ? '#fb7185' : (n.state === 'immune' ? '#34d399' : '#38bdf8');
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#0b1120';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        if (n.label) {
+          ctx.fillStyle = '#e2e8f0';
+          ctx.font = 'bold 11px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(n.label, n.x, n.y - n.r - 5);
+        }
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+  </script>
+</body>
+</html>
